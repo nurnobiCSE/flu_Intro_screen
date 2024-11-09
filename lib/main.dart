@@ -56,8 +56,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           title: "Welcome to MyApp",
           body: "This is the first page of the introduction.",
           image: Center(
-              child: Image(
-                image: AssetImage("assets/images/onboard/1.png"),
+              child: Container(
+                width: MediaQuery.of(context).size.width/1,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage("assets/images/onboard/1.png"),
+                    fit: BoxFit.fill
+                  )
+                ),
               )
           ),
         ),
@@ -65,12 +71,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           title: "Second Page",
           body: "This is the second page of the introduction.",
           image: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Image(
-                  image: AssetImage("assets/images/onboard/2.jpg"),
-                ),
-              )
+               child: Container(
+                 width: MediaQuery.of(context).size.width/1,
+                 decoration: BoxDecoration(
+                   image: DecorationImage(
+                     image: AssetImage("assets/images/onboard/2.jpg"),
+                     fit: BoxFit.fill
+                   )
+                 ),
+               ),
           ),
         ),
         PageViewModel(
