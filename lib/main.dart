@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,12 +27,38 @@ class MyApp extends StatelessWidget {
 }
 
 class StatusProvider extends ChangeNotifier {
+
   bool _status = true;
   bool get status => _status;
+  StatusProvider() {
+    // Add a listener when the provider is initialized
+    _addStatusListener();
+  }
+  void _addStatusListener() {
+    final databaseRef = FirebaseDatabase.instance.ref();
+    databaseRef.child('status').onValue.listen((event) {
+      if (event.snapshot.exists) {
+        _status = event.snapshot.value as bool;
+        notifyListeners(); // Notify listeners about the change
+      }
+    });
+  }
+  // Function to fetch status from Firebase
+  Future<void> fetchStatusFromFirebase() async{
+    final databaseRef = FirebaseDatabase.instance.ref();
+    final snapshot = await databaseRef.child('status').get();
+    if(snapshot.exists){
+      _status = snapshot.value as bool;
+      notifyListeners();
+    }
+  }
 
-  void toggleStatus() {
+  void toggleStatus() async{
+    final databaseRef = FirebaseDatabase.instance.ref();
     _status = !_status;
     notifyListeners();
+    //update the status in firebase:
+    await databaseRef.child('status').set(_status);
   }
 }
 
@@ -130,7 +157,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // final DatabaseReference _database = FirebaseDatabase.instance.ref();
+  @override
+  void initState(){
+    super.initState();
+    // Fetch the initial status from Firebase:
+    Provider.of<StatusProvider>(context, listen: false)
+        .fetchStatusFromFirebase();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Correct usage of Provider to access StatusProvider
@@ -143,7 +184,11 @@ class HomeScreen extends StatelessWidget {
           Center(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: statusProvider.toggleStatus, // Correct usage of toggleStatus
+              onPressed: () async{
+                //toggle button
+                statusProvider.toggleStatus();
+
+              }, // Correct usage of toggleStatus
               child: Text(
                 "Click Me",
                 style: TextStyle(color: Colors.white),
@@ -154,7 +199,7 @@ class HomeScreen extends StatelessWidget {
             child: Text(
               statusProvider.status ? "Status: True" : "Status: False", // Correctly accessing the status
               style: TextStyle(
-                color: statusProvider.status ? Colors.green : Colors.red,
+                color: statusProvider.status ? Colors.green : Colors.blueGrey,
                 fontSize: 24,
               ),
             ),
