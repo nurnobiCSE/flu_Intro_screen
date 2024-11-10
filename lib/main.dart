@@ -1,9 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => StatusProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,6 +22,16 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: OnboardingScreen(),
     );
+  }
+}
+
+class StatusProvider extends ChangeNotifier {
+  bool _status = true;
+  bool get status => _status;
+
+  void toggleStatus() {
+    _status = !_status;
+    notifyListeners();
   }
 }
 
@@ -46,6 +65,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final statusProvider = Provider.of<StatusProvider>(context);
+
     if (!_isFirstTime) {
       return HomeScreen(); // Navigate to your home screen if not first time
     }
@@ -56,30 +77,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           title: "Welcome to MyApp",
           body: "This is the first page of the introduction.",
           image: Center(
-              child: Container(
-                width: MediaQuery.of(context).size.width/1,
-                decoration: BoxDecoration(
+            child: Container(
+              width: MediaQuery.of(context).size.width / 1,
+              decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage("assets/images/onboard/1.png"),
-                    fit: BoxFit.fill
-                  )
-                ),
-              )
+                      image: AssetImage("assets/images/onboard/1.png"),
+                      fit: BoxFit.fill)),
+            ),
           ),
         ),
         PageViewModel(
           title: "Second Page",
           body: "This is the second page of the introduction.",
           image: Center(
-               child: Container(
-                 width: MediaQuery.of(context).size.width/1,
-                 decoration: BoxDecoration(
-                   image: DecorationImage(
-                     image: AssetImage("assets/images/onboard/2.jpg"),
-                     fit: BoxFit.fill
-                   )
-                 ),
-               ),
+            child: Container(
+              width: MediaQuery.of(context).size.width / 1,
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage("assets/images/onboard/2.jpg"),
+                      fit: BoxFit.fill)),
+            ),
           ),
         ),
         PageViewModel(
@@ -116,9 +133,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Correct usage of Provider to access StatusProvider
+    final statusProvider = Provider.of<StatusProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text("Home Screen")),
-      body: Center(child: Text("Welcome to the Home Screen!")),
+      appBar: AppBar(title: Text("Home Screen"), centerTitle: true),
+      body: Column(
+        children: [
+          Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              onPressed: statusProvider.toggleStatus, // Correct usage of toggleStatus
+              child: Text(
+                "Click Me",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+          Center(
+            child: Text(
+              statusProvider.status ? "Status: True" : "Status: False", // Correctly accessing the status
+              style: TextStyle(
+                color: statusProvider.status ? Colors.green : Colors.red,
+                fontSize: 24,
+              ),
+            ),
+          )
+        ],
+      ),
     );
   }
 }
